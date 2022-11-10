@@ -2,8 +2,9 @@ import React, {useEffect, useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Box, Button, Container, styled, TextField, Typography} from '@mui/material';
 import {useAuthState} from 'react-firebase-hooks/auth';
-import {signInWithEmailAndPassword} from 'firebase/auth';
+import {sendPasswordResetEmail} from 'firebase/auth';
 import {auth} from './firebase.js';
+import {useSnackbar} from 'notistack';
 
 const Base = styled(Container)`
   justify-content: center;
@@ -33,11 +34,20 @@ const Login = styled(Button)`
   margin-bottom: 16px;
 `;
 
-const SignIn = () => {
+const ResetPassword = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const {enqueueSnackbar} = useSnackbar();
   const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
+
+  const handleReset = () => {
+    sendPasswordResetEmail(auth, email).then((result) => {
+      enqueueSnackbar('Ссылка для восстановления пароля отправлена на почту', {variant: 'success'});
+      navigate('/');
+    }).catch(error => {
+      console.log(error);
+    });
+  };
 
   useEffect(() => {
     if (loading) {
@@ -47,30 +57,21 @@ const SignIn = () => {
     if (user) navigate('/home');
   }, [user, loading]);
 
-  const handleSignIn = () => {
-    signInWithEmailAndPassword(auth, email, password).catch((error) => {
-      console.log(error);
-    });
-  };
-
   return (
     <Base>
       <AuthBox display="flex" flexDirection="column">
-        <Title variant="h4" component="h1">Авторизация</Title>
+        <Title variant="h4" component="h1">Восстановление пароля</Title>
         <Field type="text" name="login"
                value={email}
                onChange={(e) => setEmail(e.target.value)}
-               label="Почта или логин" size="small"/>
-        <Field type="password" name="password" label="Пароль"
-               value={password}
-               onChange={(e) => setPassword(e.target.value)}
-               size="small"/>
+               label="Почта" size="small"/>
         <Login color="primary" variant="contained" size="large"
-               onClick={handleSignIn}>Войти</Login>
-        <Button variant="text" to="/reset" component={Link}>Забыли пароль?</Button>
+               onClick={handleReset}>Восстановить пароль</Login>
+        <Button variant="text" to="/" component={Link}>Вернуться</Button>
       </AuthBox>
+
     </Base>
   );
 };
 
-export default SignIn;
+export default ResetPassword;
