@@ -1,31 +1,25 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import SignIn from './SignIn.jsx';
 import Home from './Home.jsx';
 import {LinearProgress} from '@mui/material';
-import {auth} from './firebase.js';
-import {useAuthState} from 'react-firebase-hooks/auth';
 import ResetPassword from './ResetPassword.jsx';
-import {SnackbarProvider} from 'notistack';
+import {ProgressContext} from './ProgressContext.jsx';
 
 function App() {
-  const [, loading] = useAuthState(auth);
+  const {progress} = useContext(ProgressContext);
 
   return (
     <>
-      {loading && <LinearProgress style={{ position: 'absolute', top: 0, left: 0, right: 0 }} />}
-        <SnackbarProvider maxSnack={3} anchorOrigin={{
-          horizontal: 'center',
-          vertical: 'top'
-        }}>
+      {progress && <LinearProgress style={{position: 'absolute', top: 0, left: 0, right: 0}}/>}
+
       <BrowserRouter>
         <Routes>
-              <Route exact path="/" element={<SignIn/>}/>
-              <Route exact path="/reset" element={<ResetPassword/>}/>
-              <Route exact path="/home" element={<Home/>}/>
+          <Route exact path="/" element={<SignIn/>}/>
+          <Route exact path="/reset" element={<ResetPassword/>}/>
+          <Route exact path="/home" element={<Home/>}/>
         </Routes>
       </BrowserRouter>
-        </SnackbarProvider>
     </>
   );
 }

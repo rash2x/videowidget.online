@@ -1,9 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Box, Button, Container, styled, TextField, Typography} from '@mui/material';
 import {useAuthState} from 'react-firebase-hooks/auth';
 import {signInWithEmailAndPassword} from 'firebase/auth';
 import {auth} from './firebase.js';
+import {ProgressContext} from './ProgressContext.jsx';
 
 const Base = styled(Container)`
   justify-content: center;
@@ -37,6 +38,7 @@ const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [user, loading] = useAuthState(auth);
+  const {setProgress} = useContext(ProgressContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,7 +50,10 @@ const SignIn = () => {
   }, [user, loading]);
 
   const handleSignIn = () => {
-    signInWithEmailAndPassword(auth, email, password).catch((error) => {
+    setProgress(true);
+    signInWithEmailAndPassword(auth, email, password).then(() => {
+      setProgress(false);
+    }).catch((error) => {
       console.log(error);
     });
   };

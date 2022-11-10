@@ -1,10 +1,11 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Box, Button, Container, styled, TextField, Typography} from '@mui/material';
 import {useAuthState} from 'react-firebase-hooks/auth';
 import {sendPasswordResetEmail} from 'firebase/auth';
 import {auth} from './firebase.js';
 import {useSnackbar} from 'notistack';
+import {ProgressContext} from './ProgressContext.jsx';
 
 const Base = styled(Container)`
   justify-content: center;
@@ -37,13 +38,16 @@ const Login = styled(Button)`
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
   const {enqueueSnackbar} = useSnackbar();
+  const {setProgress} = useContext(ProgressContext);
   const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
 
   const handleReset = () => {
+    setProgress(true);
     sendPasswordResetEmail(auth, email).then((result) => {
       enqueueSnackbar('Ссылка для восстановления пароля отправлена на почту', {variant: 'success'});
       navigate('/');
+      setProgress(false);
     }).catch(error => {
       console.log(error);
     });
