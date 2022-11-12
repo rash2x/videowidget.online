@@ -5,6 +5,7 @@ import {useAuthState} from 'react-firebase-hooks/auth';
 import {Logout} from '@mui/icons-material';
 import {useNavigate} from 'react-router-dom';
 import VideoPlayer from './VideoPlayer.jsx';
+import VideoWidget from './VideoWidget.jsx';
 
 const Base = styled('div')`
 
@@ -51,6 +52,7 @@ const Home = () => {
 
   return (
     <Base>
+      <VideoWidget />
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
