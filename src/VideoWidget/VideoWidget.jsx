@@ -4,7 +4,7 @@ import {css, IconButton, Paper, styled} from '@mui/material';
 import Onboarding from './Onboarding.jsx';
 import {ArrowBack, Close, DragIndicator} from '@mui/icons-material';
 import Form from './Form.jsx';
-import Player from './Player.jsx';
+import VideoPlayer from '../VideoPlayer.jsx';
 
 const Base = styled(Paper)`
   z-index: ${({theme}) => theme.zIndex.modal};
@@ -153,7 +153,7 @@ const VideoWidget = () => {
 
         {step.name === steps.onBoarding.name && <Onboarding onEnter={handleOnboardingEnter}/>}
         {step.name === steps.form.name && <Form onConnect={handleConnect} localStream={localStream} connection={connection} setLocalStream={setLocalStream} setConnection={setConnection} />}
-        {localStream && <Player localStream={localStream} connection={connection} setLocalStream={setLocalStream} setConnection={setConnection} />}
+        {localStream && <VideoPlayer localStream={localStream} connection={connection} setLocalStream={setLocalStream} setConnection={setConnection} />}
       </Base>
     </Draggable>
   );

@@ -14,12 +14,6 @@ const Video = styled('video')`
   height: 100%;
 `;
 
-const PlayButton = styled(Fab)`
-  position: absolute;
-  left: 32px;
-  bottom: 32px;
-`;
-
 const PauseButton = styled(Fab)`
   position: absolute;
   left: 32px;
@@ -47,28 +41,10 @@ const VideoButton = styled(Fab)`
 `;
 
 
-const VideoPlayer = () => {
+const VideoPlayer = ({ localStream, connection, setConnection, setLocalStream }) => {
     const videoRef = useRef(null);
-    const [localStream, setLocalStream] = useState(null);
     const [muted, setMuted] = useState(true);
     const [videoMuted, setVideoMuted] = useState(false);
-    const [connection, setConnection] = useState(null);
-
-    const handlePlay = async () => {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
-      });
-
-      mediaStream.getTracks().forEach(track => {
-        connection.addTrack(track, mediaStream);
-      });
-
-      setLocalStream(mediaStream);
-
-      const offer = await connection.createOffer();
-      await connection.setLocalDescription(offer);
-    };
 
     const handleVideoStop = () => {
       setVideoMuted(!videoMuted);
@@ -87,11 +63,6 @@ const VideoPlayer = () => {
     };
 
     useEffect(() => {
-      const connection = new RTCPeerConnection(peerConfig);
-      setConnection(connection);
-    }, []);
-
-    useEffect(() => {
       videoRef.current.srcObject = localStream;
     }, [localStream]);
 
@@ -99,10 +70,6 @@ const VideoPlayer = () => {
 
     return (
       <Base>
-        {!isPlayed && <PlayButton variant="extended" color="primary" onClick={handlePlay}>
-          <PlayArrow/>
-          Начать
-        </PlayButton>}
         {isPlayed && <>
           <PauseButton variant="extended" color="error">
             <Pause/>
