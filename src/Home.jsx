@@ -5,7 +5,7 @@ import {useAuthState} from 'react-firebase-hooks/auth';
 import {Logout} from '@mui/icons-material';
 import {useNavigate} from 'react-router-dom';
 import VideoPlayer from './VideoPlayer.jsx';
-import VideoWidget from './VideoWidget.jsx';
+import VideoWidget from './VideoWidget';
 
 const Base = styled('div')`
 
