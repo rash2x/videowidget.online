@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from 'react';
 import {AppBar, Fab, IconButton, Paper, styled, Toolbar, Typography} from '@mui/material';
-import {auth, logout} from './firebase.js';
+import {auth, firestore, logout} from './firebase.js';
 import {useAuthState} from 'react-firebase-hooks/auth';
 import {Logout, PlayArrow} from '@mui/icons-material';
 import {useNavigate} from 'react-router-dom';
 import VideoPlayer from './VideoPlayer.jsx';
 import VideoWidget from './VideoWidget';
 import {peerConfig} from './peer.js';
+import {addDoc, getDoc, updateDoc, onSnapshot, collection, doc} from 'firebase/firestore';
 
 const Base = styled('div')`
 
@@ -52,7 +53,8 @@ const Home = () => {
   const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
   const [localStream, setLocalStream] = useState(null);
-  const [connection, setConnection] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [pc, setPc] = useState(null);
 
   const handleConnect = async () => {
     const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -61,21 +63,67 @@ const Home = () => {
     });
 
     mediaStream.getTracks().forEach(track => {
-      connection.addTrack(track, mediaStream);
+      pc.addTrack(track, mediaStream);
     });
 
-    setLocalStream(mediaStream);
-  };
+    pc.ontrack = (event) => {
+      event.streams[0].getTracks(track => {
+        remoteStream.addTrack(track);
+      });
+    };
 
-  useEffect(() => {
-    const connection = new RTCPeerConnection(peerConfig);
-    setConnection(connection);
-  }, []);
+    setLocalStream(mediaStream);
+
+    //Call
+    //callId
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const callId = urlParams.get('callId');
+
+    const callDoc = doc(collection(firestore, 'calls'), callId);
+    const answerCandidates = collection(callDoc, 'answerCandidates');
+    const offerCandidates = collection(callDoc, 'offerCandidates');
+
+    pc.onicecandidate = (event) => {
+      event.candidate && addDoc(answerCandidates, event.candidate.toJSON());
+    };
+
+    const callData = (await getDoc(callDoc)).data();
+
+    const offerDescription = callData.offer;
+    await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+
+    const answerDescription = await pc.createAnswer();
+    await pc.setLocalDescription(answerDescription);
+
+    const answer = {
+      type: answerDescription.type,
+      sdp: answerDescription.sdp,
+    };
+
+    await updateDoc(callDoc, {answer});
+
+    onSnapshot(offerCandidates, (snapshot) => {
+      console.log(snapshot);
+      snapshot.docChanges().forEach((change) => {
+
+        if (change.type === 'added') {
+          let data = change.doc.data();
+          pc.addIceCandidate(new RTCIceCandidate(data));
+        }
+      });
+    });
+  };
 
   useEffect(() => {
     if (loading) return;
     if (!user) return navigate('/');
   }, [user, loading]);
+
+  useEffect(() => {
+    setPc(new RTCPeerConnection(peerConfig));
+    setRemoteStream(new MediaStream());
+  }, []);
 
   return (
     <Base>
@@ -99,9 +147,7 @@ const Home = () => {
           </ConnectButton>
 
           {localStream && <VideoPlayer localStream={localStream}
-                                       connection={connection}
-                                       setLocalStream={setLocalStream}
-                                       setConnection={setConnection}/>}
+                                       remoteStream={remoteStream}/>}
         </CallBox>
       </Content>
     </Base>
